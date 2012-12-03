@@ -2,12 +2,11 @@
 
 package praktikum.beispiele.beispiel1
 
+import praktikum.beispiele.utils.Utils
 
 //========================================================================================================//
 // Importe ANFANG
 //========================================================================================================//
-
-import praktikum.beispiele.utils.Utils
 
 //========================================================================================================//
 // Importe ENDE
@@ -40,12 +39,12 @@ class HttpBeispiel {
      * oder als jar-file:<br/>
      * unzip KS_Praktikum.jar; . startbin.sh [-e environment]
      */
-    static String environment = "unikabel"
+    static String environment = "uniwlan"
 
     /** Pfad zur Konfigurationsdatei für die Ablaufumgebung <br/>
      * Der Eintrag wird durch den Kommandozeilenparameter "p" überschrieben.<br/>
      * */
-    static String confFileName = "src/praktikum/beispiele/"
+    static String confFileName = "KS_Praktikum/src/praktikum/beispiele/"
 
     //========================================================================================================//
     // Konfiguration der Ablaufumgebung ENDE
@@ -98,7 +97,7 @@ class HttpBeispiel {
         stack.open()
 
         // HTML-Dokument anfordern
-        String reply = stack.sendRequest("/xyz")
+        String reply = stack.sendRequest("/index.html")
 
         // HTML-Dokument anzeigen
         Utils.writeLog("Stack", "start", "\n********* Antwort *********\nAntwort: ${reply}\n*****************************\n")

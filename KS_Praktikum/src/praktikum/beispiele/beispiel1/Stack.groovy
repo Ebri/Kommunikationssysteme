@@ -5,21 +5,24 @@ package praktikum.beispiele.beispiel1
 // Importe ANFANG
 //========================================================================================================//
 
-import jpcap.PacketReceiver
-import praktikum.beispiele.fsm.Event
-import praktikum.beispiele.fsm.State
-import jpcap.packet.IPPacket
-import jpcap.NetworkInterface
+
 import jpcap.JpcapCaptor
+import jpcap.NetworkInterface
+import jpcap.PacketReceiver
 import jpcap.packet.EthernetPacket
-import jpcap.packet.TCPPacket
+import jpcap.packet.IPPacket
 import jpcap.packet.Packet
-import java.util.concurrent.LinkedBlockingQueue
-import praktikum.beispiele.utils.SendContainer
-import java.util.concurrent.DelayQueue
+import jpcap.packet.TCPPacket
+import praktikum.beispiele.fsm.Event
 import praktikum.beispiele.fsm.FiniteStateMachine
-import praktikum.beispiele.utils.Utils
+import praktikum.beispiele.fsm.State
 import praktikum.beispiele.utils.Cmd
+import praktikum.beispiele.utils.SendContainer
+import praktikum.beispiele.utils.Utils
+
+import java.util.concurrent.DelayQueue
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.TimeUnit
 
 //========================================================================================================//
 // Importe ENDE
@@ -448,10 +451,10 @@ public class Stack implements PacketReceiver {
         boolean analyze = false
 
         // Zur Protokollierung
-        //Utils.writeLog("Stack","receivePacket", "${recvPacket})
+        //Utils.writeLog("Stack","receivePacket", "${recvPacket}")
 
         //------------------------------------------------------//
-        // MAC bzw. Verbindungsschicht bzw. Sicherungsschicht
+        // MAC
         // Adresse
         recvFrame = recvPacket.datalink as EthernetPacket
         // Vergleich der Ziel-MAC-Adresse
@@ -473,8 +476,6 @@ public class Stack implements PacketReceiver {
                 case (EthernetPacket.ETHERTYPE_ARP):
                     recvArpPacket = recvArpPacket as ARPPacket
                     recvArpQueue.put(recvArpPacket)
-                    // Paketanalyse abbrechen
-                    analyze = false
                     break
             */
                 default:
@@ -529,6 +530,9 @@ public class Stack implements PacketReceiver {
      * @param retransTimeout Retransmission Timeout in Millsec
      */
     void sendTCPPacket(long retransTimeout) {
+        // Nur zur Protokollierung, kann auskommentiert werden
+        Utils.writeLog("Stack", "sentTCPPacket", "sending: ${sendAckFlag ? "ACK, " : ""}${sendSynFlag ? "SYN, " : ""}${sendFinFlag ? "FIN, " : ""}${sendSeqNumber}, " +
+                "${sendAckNumber}, \"${new String(sendData)}\"")
 
         // TCP
         /*
@@ -539,7 +543,7 @@ public class Stack implements PacketReceiver {
         */
 
         sentTCPPacket = new TCPPacket(sendSrcPort, sendDstPort, sendSeqNumber, sendAckNumber, false, sendAckFlag, false,
-                false, sendSynFlag, sendFinFlag, false, false, sendWindowSize, 0)
+                false, sendSynFlag, sendFinFlag, true, true, sendWindowSize, 0)
         sentTCPPacket.data = sendData
 
         //------------------------------------------------------//
@@ -650,15 +654,9 @@ public class Stack implements PacketReceiver {
 
                 packet = sc.packet as Packet
 
-                // Wenn das Paket ein TCP-Paket ist und es bereits quittiert wurde: nicht nochmals senden
+                // Wenn das Paket ein TCP-Paket ist und es bereits quittiert wurde: nicht senden
                 if (packet instanceof TCPPacket) {
                     if (packet.sequence >= recvAckNumber) {
-
-                        // Nur zur Protokollierung, kann auskommentiert werden
-                        Utils.writeLog("Stack", "processQueues", "sending: ${packet.ack ? "ACK, " : ""}"+
-                                "${packet.syn ? "SYN, " : ""}${packet.fin ? "FIN, " : ""}${packet.sequence}, " +
-                                "${packet.ack_num}, \"${new String(packet.data)}\"")
-
                         // Paket ist noch nicht quittiert also senden
                         sender.sendPacket(packet)
                         // Soll nochmaliges Senden nach Retransmission Timeout organisiert werden?
@@ -735,7 +733,7 @@ public class Stack implements PacketReceiver {
             // TODO: "port 80" angeben?, sonst wird z.B. auch ssh ... verarbeitet
             receiver.setFilter("tcp and host ${httpServerIPAddress} and host ${ownIPAddress}", true)
 
-            // Receiver als thread starten
+            //
             receiverThread = Thread.start {receiver.loopPacket(-1, this)}
         }
 
@@ -802,20 +800,50 @@ public class Stack implements PacketReceiver {
         // HTTP-PDU
         byte[] applicationData = "GET ${page} HTTP/1.1\n\n".getBytes()
 
-        String result
+        String result = "";
 
         // Übergabe des Kommandos und der HTTP-PDU
-        cmdQueue.put([Cmd.GET, applicationData])
+        cmdQueue.put    ([Cmd.GET, applicationData])
 
         // Warten auf die Antwort des HTTP-Servers
         // Achtung: Es wird nur das erste vom Server empfangene Paket an die Anwendung geliefert!!
-        result = new String(resultQueue.take()[1] as byte[])
+
+
+        //Messe die Zeit bis das erste Teilstück übertragen worden ist.
+
+        //Zeitfenster für die folgenden Teile
+
+        long waitTime = 1500;
+
+        int retryCount = 0;
+        List resultByte = ["",""];
+        long end = 0;
+        long start1 = System.currentTimeMillis();
+        while (resultByte != null || retryCount < 5) {
+
+
+            //Berechne die Zeit für jeden nächste Teil neu
+            long start = System.currentTimeMillis();
+            resultByte = resultQueue.poll(waitTime,TimeUnit.MILLISECONDS)
+            end = System.currentTimeMillis();
+            if (resultByte == null) {
+                retryCount++;
+                System.out.println("*------------------* DEBUG: " + retryCount + " *-----------------*")
+            }
+            else {
+                retryCount = 0;
+                result += new String(resultByte[1] as byte[]);
+            }
+            waitTime = end - start + 500;
+        }
+
+
+        System.out.println("############ Time to finish: " + (end - start1) + " ############")
 
         // Warten, bis Server (wahrscheinlich) alles gesendet hat
         // Anstatt zu warten besser untersuchen, ob mehr Daten zu empfangen sind:
         // "HTTP: Content-Length" auswerten
         // ...
-        sleep(sec10)
 
         return result
     }
