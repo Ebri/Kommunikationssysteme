@@ -819,7 +819,8 @@ public class Stack implements PacketReceiver {
         List resultByte = ["",""];
         long end = 0;
         long start1 = System.currentTimeMillis();
-        while (resultByte != null || retryCount < 5) {
+        boolean contentComplete = false;
+        while ((resultByte != null || retryCount < 5) && !contentComplete) {
 
 
             //Berechne die Zeit für jeden nächste Teil neu
@@ -834,6 +835,14 @@ public class Stack implements PacketReceiver {
                 retryCount = 0;
                 result += new String(resultByte[1] as byte[]);
                 HttpHeaderParser parser = new HttpHeaderParser(result);
+                System.out.println("*********** Content Length: " + parser.getContentLength());
+                System.out.println("*********** Data: " + parser.getData());
+                System.out.println("*********** Data Length: " + parser.getDataLength());
+                if (parser.checkData()) {
+                    if (parser.getDataLength() == parser.getContentLength()) {
+                        contentComplete = true;
+                    }
+                }
             }
             waitTime = end - start + 500;
         }

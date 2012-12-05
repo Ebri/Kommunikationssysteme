@@ -15,8 +15,9 @@ class HttpHeaderParser {
 
 	public HttpHeaderParser(String httpHeader) {
 		this.httpHeader = httpHeader;
+        attributes = new HashMap<String, String>();
 
-		String[] lines = httpHeader.split("\r");
+		String[] lines = httpHeader.split("\r\n");
 		System.out.println("***** Lines ****\n" + lines + "\n**********************");
 
         for (String line : lines) {
@@ -40,9 +41,32 @@ class HttpHeaderParser {
 
     int getContentLength() {
         if (attributes.containsKey("Content-Length")) {
-            String
-            return
+            String length = attributes.get("Content-Length");
+            length = length.substring(1);
+            int intLength = Integer.parseInt(length);
+            System.out.println("Length ermittelt!");
+
+            return intLength;
         }
+        else return 0;
+    }
+
+    boolean checkData() {
+        String[] data = httpHeader.split("\r\n\r\n");
+        return data.length > 1;
+    }
+
+    String getData() {
+        String[] data = httpHeader.split("\r\n\r\n");
+        if (data.length > 1) {
+            return data[1];
+        }
+        else return "keine Daten";
+    }
+
+    int getDataLength() {
+        String data = getData();
+        return data.length();
     }
 
 
