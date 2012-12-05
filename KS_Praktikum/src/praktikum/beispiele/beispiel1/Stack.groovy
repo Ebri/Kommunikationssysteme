@@ -833,6 +833,7 @@ public class Stack implements PacketReceiver {
             else {
                 retryCount = 0;
                 result += new String(resultByte[1] as byte[]);
+                HttpHeaderParser parser = new HttpHeaderParser(result);
             }
             waitTime = end - start + 500;
         }
