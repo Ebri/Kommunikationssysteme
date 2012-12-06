@@ -1,14 +1,11 @@
 package praktikum.beispiele.beispiel1
-
 import groovy.mock.interceptor.MockFor
-
 import jpcap.packet.EthernetPacket
 import jpcap.packet.TCPPacket
-import org.junit.BeforeClass
 import org.junit.Test
-import praktikum.beispiele.utils.Cmd
 import praktikum.beispiele.fsm.Event
 import praktikum.beispiele.fsm.State
+import praktikum.beispiele.utils.Cmd
 import praktikum.beispiele.utils.SendContainer
 import praktikum.beispiele.utils.Utils
 
@@ -20,8 +17,8 @@ class TestAll extends GroovyTestCase {
     final int sec3 = 3000
     final int sec4 = 4000
 
-    String environment = "unikabel"
-    String confFileName = "src/praktikum/beispiele/env.conf"
+    String environment = "wlan"
+    String confFileName = "KS_Praktikum/src/praktikum/beispiele/env.conf"
 
     // =================================================================
 

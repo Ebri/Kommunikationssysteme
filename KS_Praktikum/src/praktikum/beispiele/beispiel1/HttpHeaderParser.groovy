@@ -17,45 +17,54 @@ class HttpHeaderParser {
 		this.httpHeader = httpHeader;
         attributes = new HashMap<String, String>();
 
+        // Trenne die Zeilen des HTTP-Headers an <CR><LF>
 		String[] lines = httpHeader.split("\r\n");
-		System.out.println("***** Lines ****\n" + lines + "\n**********************");
 
+        // Untersuche die Zeilen auf einen Doppelpunkt und trenne die Schlüssel-Attribut-Paare daran.
         for (String line : lines) {
             if (line.contains(":")) {
                 String[] fields = line.split(":");
-                System.out.println("****** Fields ***** \n" + fields + "\n*********************");
-                attributes.put(fields[0],fields[1]);
+                attributes.put(fields[0],fields[1].trim());
             }
         }
 
 
 	}
 
+    /**
+     * Prüft ob das "Content-Length" Attribut vorhanden ist.
+     * @return true - wenn vorhanden
+     */
     boolean checkContentLength() {
-        if (attributes.containsKey("Content-Length")) {
-            return true;
-        }
-        else
-            return false;
+        return attributes.containsKey("Content-Length");
     }
 
+    /**
+     * Gibt den Wert des Content-Length Attributes zurück, wenn dieses vorhanden ist.
+     * @return Die Länge des Datenteils, wenn das Attribut vorhanden ist, sonst 0.
+     */
     int getContentLength() {
         if (attributes.containsKey("Content-Length")) {
             String length = attributes.get("Content-Length");
-            length = length.substring(1);
             int intLength = Integer.parseInt(length);
-            System.out.println("Length ermittelt!");
-
             return intLength;
         }
         else return 0;
     }
 
+    /**
+     * Prüft ob der Datenteil vorhanden ist bzw. anfängt.
+     * @return true - wenn vorhanden, sonst false.
+     */
     boolean checkData() {
         String[] data = httpHeader.split("\r\n\r\n");
         return data.length > 1;
     }
 
+    /**
+     * Gibt den Datenteil als String zurück.
+     * @return die HTTP-Daten.
+     */
     String getData() {
         String[] data = httpHeader.split("\r\n\r\n");
         if (data.length > 1) {
@@ -64,6 +73,10 @@ class HttpHeaderParser {
         else return "keine Daten";
     }
 
+    /**
+     * Gibt die Länge der bisher Abgerufenen Daten zurück.
+     * @return Länge der Daten
+     */
     int getDataLength() {
         String data = getData();
         return data.length();

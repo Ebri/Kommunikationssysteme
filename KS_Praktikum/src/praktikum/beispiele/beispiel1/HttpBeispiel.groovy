@@ -45,6 +45,7 @@ class HttpBeispiel {
      * Der Eintrag wird durch den Kommandozeilenparameter "p" überschrieben.<br/>
      * */
     static String confFileName = "KS_Praktikum/src/praktikum/beispiele/"
+    static boolean debug = false;
 
     //========================================================================================================//
     // Konfiguration der Ablaufumgebung ENDE
@@ -64,6 +65,7 @@ class HttpBeispiel {
         cli.h(required: false, 'Hilfe anzeigen')
         cli.e(required: false, args: 1, 'Name der zu verwendenden Ablaufumgebung')
         cli.p(required: false, args: 1, "Pfad zu \'env.conf\', also z.B. \'praktikum/beispiele/\', nur beim Start von der Kommandozeile")
+        cli.d(required: false, args: 0, "Debugausgaben anzeigen")
 
         // Kommandozeilenparameter parsen
         def options = cli.parse(args)
@@ -79,6 +81,10 @@ class HttpBeispiel {
             environment = options.e
         }
 
+        if (options.d){
+            debug = true;
+        }
+
         // Pfad zur Konfigurationsdatei der Ablaufumgebungen setzen
         confFileName += confFile
         if (options.p) {
@@ -88,7 +94,7 @@ class HttpBeispiel {
         // ------------------------------------------------------------------------- //
 
         // Den Netzwerkstack initialisieren
-        Stack stack = new Stack(confFileName, environment)
+        Stack stack = new Stack(confFileName, environment, debug)
 
         // Arbeit des Netzwerkstacks beginnen
         stack.start()

@@ -1,6 +1,5 @@
 package praktikum.beispiele.beispiel1
 
-
 //========================================================================================================//
 // Importe ANFANG
 //========================================================================================================//
@@ -27,7 +26,6 @@ import java.util.concurrent.TimeUnit
 //========================================================================================================//
 // Importe ENDE
 //========================================================================================================//
-
 
 //========================================================================================================//
 // Stack-Klasse ANFANG
@@ -72,7 +70,6 @@ public class Stack implements PacketReceiver {
     //========================================================================================================//
     // EINSTELLUNGEN ENDE
     //========================================================================================================//
-
 
     //========================================================================================================//
     // TCP ANFANG
@@ -152,7 +149,6 @@ public class Stack implements PacketReceiver {
     // TCP ENDE
     //========================================================================================================//
 
-
     //========================================================================================================//
     // IPv4 ANFANG
     //========================================================================================================//
@@ -174,7 +170,6 @@ public class Stack implements PacketReceiver {
     // IPv4 ENDE
     //========================================================================================================//
 
-
     //========================================================================================================//
     // MAC ANFANG
     //========================================================================================================//
@@ -189,7 +184,6 @@ public class Stack implements PacketReceiver {
     //========================================================================================================//
     // MAC ENDE
     //========================================================================================================//
-
 
     //========================================================================================================//
     // Programm-interne Vereinbarungen ANFANG
@@ -259,11 +253,11 @@ public class Stack implements PacketReceiver {
     FiniteStateMachine fsm
     /** Der Anfangszustand der Finiten Zustandsmaschine */
     int newState = State.S_IDLE
+    boolean debug
 
     //========================================================================================================//
     // Programm-interne Vereinbarungen ENDE
     //========================================================================================================//
-
 
     //========================================================================================================//
     // Methoden ANFANG
@@ -275,8 +269,8 @@ public class Stack implements PacketReceiver {
      * @param confFileName Pfad zur Konfigurationsdatei
      * @param environment Name der Ablaufumgebung
      */
-    Stack(String confFileName, String environment) {
-
+    Stack(String confFileName, String environment, boolean debug) {
+        this.debug = debug;
         // Konfiguration aus Datei lesen
         File confFile = new File(confFileName)
         config = new ConfigSlurper(environment).parse(confFile.toURL())
@@ -414,16 +408,21 @@ public class Stack implements PacketReceiver {
         recvData = Utils.concatenateByteArrays(recvData, packet.data)
 
         // Nur zur Protokollierunng, kann auskommentiert werden
-        Utils.writeLog("Stack","processTCPPacket","received: ${recvAckFlag ? "ACK," : ""} ${recvSynFlag ? "SYN," : ""}" +
+        Utils.writeLog("Stack", "processTCPPacket", "received: ${recvAckFlag ? "ACK," : ""} ${recvSynFlag ? "SYN," : ""}" +
                 "${recvFinFlag ? "FIN," : ""} ${recvSeqNumber}" +
                 ",${recvAckNumber}, \"${new String(recvData)}\"")
 
         int event = 0
         // Ereignis bestimmen
-        if (recvAckFlag && recvSynFlag) {event = Event.E_RCVD_SYN_ACK}
-        else if (recvFinFlag) {event = Event.E_RCVD_FIN_ACK}
-        else if (recvAckFlag && !packet.data.size()) {event = Event.E_RCVD_ACK}
-        else if (recvAckFlag && packet.data.size()) {event = Event.E_RCVD_DATA}
+        if (recvAckFlag && recvSynFlag) {
+            event = Event.E_RCVD_SYN_ACK
+        } else if (recvFinFlag) {
+            event = Event.E_RCVD_FIN_ACK
+        } else if (recvAckFlag && !packet.data.size()) {
+            event = Event.E_RCVD_ACK
+        } else if (recvAckFlag && packet.data.size()) {
+            event = Event.E_RCVD_DATA
+        }
         try {
             if (event) {
                 // Zustandsübergang bestimmen lassen
@@ -435,7 +434,7 @@ public class Stack implements PacketReceiver {
             }
         }
         catch (Exception e) {
-            Utils.writeLog("Stack","processTCPPacket","${e.getStackTrace()}")
+            Utils.writeLog("Stack", "processTCPPacket", "${e.getStackTrace()}")
         }
     }
 
@@ -575,7 +574,6 @@ public class Stack implements PacketReceiver {
     //  Protokoll Verarbeitung ENDE
     //========================================================================================================//
 
-
     //========================================================================================================//
     // Steuerung der internen Abläufe ANFANG
     //========================================================================================================//
@@ -623,7 +621,7 @@ public class Stack implements PacketReceiver {
      *  Die Sende-Queue hat die Besonderheit, das die darin enthaltenen Elemente mit einem Timeout
      *  versehen sind und erst entnommen werden, wenn der Timeout abgelaufen ist.
      *  Dieses Verhalten wird zur Organisierung von TCP-Retransmits verwendet.<p/>
-     *  @see SendContainer
+     * @see SendContainer
      *
      */
     void processQueues() {
@@ -703,7 +701,6 @@ public class Stack implements PacketReceiver {
     // Steuerung der internen Abläufe ENDE
     //========================================================================================================//
 
-
     //========================================================================================================//
     // Steuerung des Stacks ANFANG
     //========================================================================================================//
@@ -734,7 +731,7 @@ public class Stack implements PacketReceiver {
             receiver.setFilter("tcp and host ${httpServerIPAddress} and host ${ownIPAddress}", true)
 
             //
-            receiverThread = Thread.start {receiver.loopPacket(-1, this)}
+            receiverThread = Thread.start { receiver.loopPacket(-1, this) }
         }
 
         // Thread zur Organisation der Queues starten
@@ -773,7 +770,8 @@ public class Stack implements PacketReceiver {
         // Übergabe des Kommandos
         cmdQueue.put([Cmd.OPEN])
         // Warten auf abgeschlossenen Verbindungsaufbau (hier sollte ein Timeout verwendet werden)
-        while (fsm.getState() != State.S_WAITING) {}
+        while (fsm.getState() != State.S_WAITING) {
+        }
     }
 
     //------------------------------------------------------------------------------//
@@ -785,7 +783,8 @@ public class Stack implements PacketReceiver {
         // Übergabe des Kommandos
         cmdQueue.put([Cmd.CLOSE])
         // Warten auf Beendigung der Verbindung (hier sollte ein Timeout verwendet werden)
-        while (fsm.getState() != State.S_IDLE) {}
+        while (fsm.getState() != State.S_IDLE) {
+        }
     }
 
     //------------------------------------------------------------------------------//
@@ -803,52 +802,102 @@ public class Stack implements PacketReceiver {
         String result = "";
 
         // Übergabe des Kommandos und der HTTP-PDU
-        cmdQueue.put    ([Cmd.GET, applicationData])
+        cmdQueue.put([Cmd.GET, applicationData])
 
         // Warten auf die Antwort des HTTP-Servers
         // Achtung: Es wird nur das erste vom Server empfangene Paket an die Anwendung geliefert!!
 
-
         //Messe die Zeit bis das erste Teilstück übertragen worden ist.
 
-        //Zeitfenster für die folgenden Teile
+        //Zeitfenster für die folgenden Teile initialisieren
 
         long waitTime = 1500;
 
         int retryCount = 0;
-        List resultByte = ["",""];
+
+        // Result Queue Entries zwischenspeichern
+        List resultQueueEntry = ["", ""];
+
+        // Zeitmessung initialisieren
         long end = 0;
         long start1 = System.currentTimeMillis();
+
         boolean contentComplete = false;
-        while ((resultByte != null || retryCount < 5) && !contentComplete) {
 
+        /*
+        Solange etwas aus dem ResultQueue entnommen wurde, wird die Schleife ausgeführt. Wenn nichts entnommen wurde,
+        dann wird ein Zähler hochgezählt, der nach 5 Counts die Schleife abbricht.
+        Wenn ein "Content-Length" Attribut im HTTP-Header gefunden wird, wird die Schleife abgebrochen, wenn die Content-Length
+        erreicht wurde.
+         */
+        while ((resultQueueEntry != null || retryCount < 5) && !contentComplete) {
 
-            //Berechne die Zeit für jeden nächste Teil neu
+            // Berechne die Zeit für jeden nächste Teil neu
             long start = System.currentTimeMillis();
-            resultByte = resultQueue.poll(waitTime,TimeUnit.MILLISECONDS)
-            end = System.currentTimeMillis();
-            if (resultByte == null) {
-                retryCount++;
-                System.out.println("*------------------* DEBUG: " + retryCount + " *-----------------*")
+
+            // erste Queueentnahme mittels take()
+            if (result.equals("")) {
+                if (debug)
+                    System.out.println("****** Take ******")
+                resultQueueEntry = resultQueue.take();
+
+            // Alle weiteren mittels poll()
+            } else {
+                if (debug)
+                    System.out.println("****** Poll ******")
+                resultQueueEntry = resultQueue.poll(waitTime, TimeUnit.MILLISECONDS)
             }
-            else {
+
+            // Zeitmessung
+            end = System.currentTimeMillis();
+
+            // Wenn nichts aus dem ResultQueue entnommen wurde, zähle den Counter hoch.
+            if (resultQueueEntry == null) {
+                retryCount++;
+                if (debug)
+                    System.out.println("*------------------* DEBUG: " + retryCount + " *-----------------*")
+
+            // sonst
+            } else {
+
+                // Setze Counter zurück
                 retryCount = 0;
-                result += new String(resultByte[1] as byte[]);
+
+                // Füge die TCP-Daten (HTTP-Header + Daten) nach jeden Queueabruf zusammen
+                result += new String(resultQueueEntry[1] as byte[]);
+
+                // Parse den HTTP-Header um die Attribute auszulesen
                 HttpHeaderParser parser = new HttpHeaderParser(result);
-                System.out.println("*********** Content Length: " + parser.getContentLength());
-                System.out.println("*********** Data: " + parser.getData());
-                System.out.println("*********** Data Length: " + parser.getDataLength());
+
+                if (debug) {
+                    System.out.println("*********** Content Length: " + parser.getContentLength());
+                    System.out.println("*********** Data: " + parser.getData());
+                    System.out.println("*********** Data Length: " + parser.getDataLength());
+                }
+                /*
+                Wenn der Datenteil anfägt (nach einer Leerzeile), prüfe, ob das Content-Length Attribut im Header gesetzt ist.
+                Wenn ja, führe das Abrufen des Queues weiter aus, bis die angegebene Datenlänge erreicht ist.
+                Wenn nein, wird angenommen, dass die Daten leer sind und die Abfrage auch beendet.
+
+                 */
                 if (parser.checkData()) {
-                    if (parser.getDataLength() == parser.getContentLength()) {
+                    if (parser.checkContentLength()) {
+                        if (parser.getDataLength() == parser.getContentLength()) {
+                            contentComplete = true;
+                        }
+                    } else
                         contentComplete = true;
-                    }
                 }
             }
+
+            // Berechne die neue waitTime
             waitTime = end - start + 500;
         }
 
-
-        System.out.println("############ Time to finish: " + (end - start1) + " ############")
+        if (debug)
+            System.out.println("##############################################\n" +
+                    "############ Time to finish: " + (end - start1) + " ############\n" +
+                    "##############################################")
 
         // Warten, bis Server (wahrscheinlich) alles gesendet hat
         // Anstatt zu warten besser untersuchen, ob mehr Daten zu empfangen sind:
@@ -861,7 +910,6 @@ public class Stack implements PacketReceiver {
     //========================================================================================================//
     // Steuerung des Stacks ENDE
     //========================================================================================================//
-
 
     //========================================================================================================//
     // Methoden ENDE
