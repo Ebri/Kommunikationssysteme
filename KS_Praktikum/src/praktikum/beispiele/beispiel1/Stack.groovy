@@ -1,12 +1,11 @@
 package praktikum.beispiele.beispiel1
 
+import jpcap.JpcapCaptor
+import jpcap.NetworkInterface
+
 //========================================================================================================//
 // Importe ANFANG
 //========================================================================================================//
-
-
-import jpcap.JpcapCaptor
-import jpcap.NetworkInterface
 import jpcap.PacketReceiver
 import jpcap.packet.EthernetPacket
 import jpcap.packet.IPPacket
@@ -21,7 +20,6 @@ import praktikum.beispiele.utils.Utils
 
 import java.util.concurrent.DelayQueue
 import java.util.concurrent.LinkedBlockingQueue
-import java.util.concurrent.TimeUnit
 
 //========================================================================================================//
 // Importe ENDE
@@ -299,6 +297,7 @@ public class Stack implements PacketReceiver {
      * @param newState Zu behandelnder Zustand
      */
     void handleStateChange(int newState) {
+        System.out.println("********** [handleStateChange] New State: " + newState)
         switch (newState) {
             case (State.S_SEND_SYN):
                 // Verbindungsaufbau beginnen
@@ -350,14 +349,14 @@ public class Stack implements PacketReceiver {
                 if (recvSeqNumber == sendAckNumber) {
                     sendSynFlag = false
                     sendAckFlag = true
-                    sendAckNumber = sendAckNumber + recvData.size()
+                    //sendAckNumber = sendAckNumber + recvData.size()
                     sendFinFlag = false
                     sendData = []
                     // Daten an Anwendung übergeben
                     resultQueue.put([Cmd.DATA, recvData.clone()])
                     recvData = []
                     // ACK für Daten senden
-                    sendTCPPacket(retransTimeout0)
+                    //sendTCPPacket(retransTimeout0)
                     fsm.fire(Event.E_WAITING)
                 }
                 break
@@ -811,93 +810,24 @@ public class Stack implements PacketReceiver {
 
         //Zeitfenster für die folgenden Teile initialisieren
 
-        long waitTime = 1500;
-
-        int retryCount = 0;
-
-        // Result Queue Entries zwischenspeichern
         List resultQueueEntry = ["", ""];
 
-        // Zeitmessung initialisieren
-        long end = 0;
-        long start1 = System.currentTimeMillis();
+        long start = System.currentTimeMillis();
 
-        boolean contentComplete = false;
-
-        /*
-        Solange etwas aus dem ResultQueue entnommen wurde, wird die Schleife ausgeführt. Wenn nichts entnommen wurde,
-        dann wird ein Zähler hochgezählt, der nach 5 Counts die Schleife abbricht.
-        Wenn ein "Content-Length" Attribut im HTTP-Header gefunden wird, wird die Schleife abgebrochen, wenn die Content-Length
-        erreicht wurde.
-         */
-        while ((resultQueueEntry != null || retryCount < 5) && !contentComplete) {
-
-            // Berechne die Zeit für jeden nächste Teil neu
-            long start = System.currentTimeMillis();
-
-            // erste Queueentnahme mittels take()
-            if (result.equals("")) {
-                if (debug)
-                    System.out.println("****** Take ******")
-                resultQueueEntry = resultQueue.take();
-
-            // Alle weiteren mittels poll()
-            } else {
-                if (debug)
-                    System.out.println("****** Poll ******")
-                resultQueueEntry = resultQueue.poll(waitTime, TimeUnit.MILLISECONDS)
-            }
-
-            // Zeitmessung
-            end = System.currentTimeMillis();
-
-            // Wenn nichts aus dem ResultQueue entnommen wurde, zähle den Counter hoch.
-            if (resultQueueEntry == null) {
-                retryCount++;
-                if (debug)
-                    System.out.println("*------------------* DEBUG: " + retryCount + " *-----------------*")
-
-            // sonst
-            } else {
-
-                // Setze Counter zurück
-                retryCount = 0;
-
-                // Füge die TCP-Daten (HTTP-Header + Daten) nach jeden Queueabruf zusammen
-                result += new String(resultQueueEntry[1] as byte[]);
-
-                // Parse den HTTP-Header um die Attribute auszulesen
-                HttpHeaderParser parser = new HttpHeaderParser(result);
-
-                if (debug) {
-                    System.out.println("*********** Content Length: " + parser.getContentLength());
-                    System.out.println("*********** Data: " + parser.getData());
-                    System.out.println("*********** Data Length: " + parser.getDataLength());
-                }
-                /*
-                Wenn der Datenteil anfägt (nach einer Leerzeile), prüfe, ob das Content-Length Attribut im Header gesetzt ist.
-                Wenn ja, führe das Abrufen des Queues weiter aus, bis die angegebene Datenlänge erreicht ist.
-                Wenn nein, wird angenommen, dass die Daten leer sind und die Abfrage auch beendet.
-
-                 */
-                if (parser.checkData()) {
-                    if (parser.checkContentLength()) {
-                        if (parser.getDataLength() == parser.getContentLength()) {
-                            contentComplete = true;
-                        }
-                    } else
-                        contentComplete = true;
-                }
-            }
-
-            // Berechne die neue waitTime
-            waitTime = end - start + 500;
-        }
-
+        resultQueueEntry = resultQueue.take();
         if (debug)
-            System.out.println("##############################################\n" +
-                    "############ Time to finish: " + (end - start1) + " ############\n" +
-                    "##############################################")
+            System.out.println("****** Take ******")
+
+        for (int i = 0; i < 10; i++) {
+            resultQueueEntry = resultQueue.take();
+            if (debug)
+                System.out.println("****** Take ******")
+
+            long end = System.currentTimeMillis();
+
+            System.out.println("******Retransmission Timeout: " + (end - start));
+            start = System.currentTimeMillis();
+        }
 
         // Warten, bis Server (wahrscheinlich) alles gesendet hat
         // Anstatt zu warten besser untersuchen, ob mehr Daten zu empfangen sind:
