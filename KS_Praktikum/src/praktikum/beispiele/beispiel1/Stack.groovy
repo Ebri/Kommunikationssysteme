@@ -841,7 +841,7 @@ public class Stack implements PacketReceiver {
                     System.out.println("****** Take ******")
                 resultQueueEntry = resultQueue.take();
 
-            // Alle weiteren mittels poll()
+                // Alle weiteren mittels poll()
             } else {
                 if (debug)
                     System.out.println("****** Poll ******")
@@ -857,7 +857,7 @@ public class Stack implements PacketReceiver {
                 if (debug)
                     System.out.println("*------------------* DEBUG: " + retryCount + " *-----------------*")
 
-            // sonst
+                // sonst
             } else {
 
                 // Setze Counter zurück
