@@ -885,8 +885,7 @@ public class Stack implements PacketReceiver {
                         if (parser.getDataLength() == parser.getContentLength()) {
                             contentComplete = true;
                         }
-                    } else
-                        contentComplete = true;
+                    }
                 }
             }
 
