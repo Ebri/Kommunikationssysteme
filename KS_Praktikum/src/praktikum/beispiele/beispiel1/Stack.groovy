@@ -112,7 +112,7 @@ public class Stack implements PacketReceiver {
     /** Portnummer des Empfängers */
     int sendDstPort = 80
     /** Größe des Empfangsfensters */
-    int sendWindowSize = 100
+    int sendWindowSize = 14000
     /** Zu sendende Sequenznummer */
     long sendSeqNumber = 0
     /** Zu sendende Quittierungsnummer */
@@ -794,10 +794,13 @@ public class Stack implements PacketReceiver {
      * @param page Der Pfad zum HTML-Dokument
      * @return HTML-Dokument (hier: nur das erste Teilstück)
      */
-    String sendRequest(String page) {
+    String sendRequest(String page, String host) {
 
         // HTTP-PDU
-        byte[] applicationData = "GET ${page} HTTP/1.1\n\n".getBytes()
+        String applicationDataString = "GET ${page} HTTP/1.1\r\n";
+        String HostString = (host.length() > 0)?"Host: ${host}":""
+        applicationDataString += HostString + "\r\n\r\n";
+        byte[] applicationData = applicationDataString.getBytes()
 
         String result = "";
 

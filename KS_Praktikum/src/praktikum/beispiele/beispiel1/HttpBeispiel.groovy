@@ -91,6 +91,10 @@ class HttpBeispiel {
             confFileName = options.p + confFile
         }
 
+        File confFile = new File(confFileName)
+        ConfigObject config = new ConfigSlurper(environment).parse(confFile.toURL())
+        String host = config.host;
+
         // ------------------------------------------------------------------------- //
 
         // Den Netzwerkstack initialisieren
@@ -103,7 +107,7 @@ class HttpBeispiel {
         stack.open()
 
         // HTML-Dokument anfordern
-        String reply = stack.sendRequest("/index.html")
+        String reply = stack.sendRequest("/", host)
 
         // HTML-Dokument anzeigen
         Utils.writeLog("Stack", "start", "\n********* Antwort *********\nAntwort: ${reply}\n*****************************\n")
