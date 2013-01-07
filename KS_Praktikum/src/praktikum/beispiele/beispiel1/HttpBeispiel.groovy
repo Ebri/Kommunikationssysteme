@@ -39,7 +39,7 @@ class HttpBeispiel {
      * oder als jar-file:<br/>
      * unzip KS_Praktikum.jar; . startbin.sh [-e environment]
      */
-    static String environment = "uniwlan"
+    static String environment = "wlan"
 
     /** Pfad zur Konfigurationsdatei für die Ablaufumgebung <br/>
      * Der Eintrag wird durch den Kommandozeilenparameter "p" überschrieben.<br/>
@@ -107,10 +107,11 @@ class HttpBeispiel {
         stack.open()
 
         // HTML-Dokument anfordern
-        String reply = stack.sendRequest("/", host)
+        String reply = stack.sendRequest("/search?client=ubuntu&channel=fs&q=abc&ie=utf-8&oe=utf-8&redir_esc=&ei=LN3qUJzsLImdtQa_-YDoBg", host)
 
         // HTML-Dokument anzeigen
         Utils.writeLog("Stack", "start", "\n********* Antwort *********\nAntwort: ${reply}\n*****************************\n")
+        System.out.println(stack.winSizes.toString())
 
         // Verbindung zum HTTP-Dienst ("Web-Server") schließen
         stack.close()
