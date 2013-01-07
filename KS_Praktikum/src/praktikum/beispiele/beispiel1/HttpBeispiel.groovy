@@ -107,7 +107,7 @@ class HttpBeispiel {
         stack.open()
 
         // HTML-Dokument anfordern
-        String reply = stack.sendRequest("/webhp?hl=de&tab=ww", host)
+        String reply = stack.sendRequest("/index.html", host)
 
         // HTML-Dokument anzeigen
         Utils.writeLog("Stack", "start", "\n********* Antwort *********\nAntwort: ${reply}\n*****************************\n")
