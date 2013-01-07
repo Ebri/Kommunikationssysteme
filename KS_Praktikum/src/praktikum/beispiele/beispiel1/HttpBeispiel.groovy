@@ -39,7 +39,7 @@ class HttpBeispiel {
      * oder als jar-file:<br/>
      * unzip KS_Praktikum.jar; . startbin.sh [-e environment]
      */
-    static String environment = "uniwlan"
+    static String environment = "wlan"
 
     /** Pfad zur Konfigurationsdatei für die Ablaufumgebung <br/>
      * Der Eintrag wird durch den Kommandozeilenparameter "p" überschrieben.<br/>
