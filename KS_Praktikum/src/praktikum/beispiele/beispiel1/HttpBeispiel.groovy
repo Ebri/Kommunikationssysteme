@@ -107,11 +107,10 @@ class HttpBeispiel {
         stack.open()
 
         // HTML-Dokument anfordern
-        String reply = stack.sendRequest("/search?client=ubuntu&channel=fs&q=abc&ie=utf-8&oe=utf-8&redir_esc=&ei=LN3qUJzsLImdtQa_-YDoBg", host)
+        String reply = stack.sendRequest("/webhp?hl=de&tab=ww", host)
 
         // HTML-Dokument anzeigen
         Utils.writeLog("Stack", "start", "\n********* Antwort *********\nAntwort: ${reply}\n*****************************\n")
-        System.out.println(stack.winSizes.toString())
 
         // Verbindung zum HTTP-Dienst ("Web-Server") schließen
         stack.close()

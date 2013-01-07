@@ -350,6 +350,7 @@ public class Stack implements PacketReceiver {
                 if (recvSeqNumber == sendAckNumber) {
                     sendSynFlag = false
                     sendAckFlag = true
+                    // FETTES FUCK YOU MR.SOMMER DUMPFBACKE
                     sendAckNumber = sendAckNumber + recvData.size()
                     sendFinFlag = false
                     sendData = []
@@ -830,8 +831,6 @@ public class Stack implements PacketReceiver {
         /*
         Solange etwas aus dem ResultQueue entnommen wurde, wird die Schleife ausgeführt. Wenn nichts entnommen wurde,
         dann wird ein Zähler hochgezählt, der nach 5 Counts die Schleife abbricht.
-        Wenn ein "Content-Length" Attribut im HTTP-Header gefunden wird, wird die Schleife abgebrochen, wenn die Content-Length
-        erreicht wurde.
          */
         while ((resultQueueEntry != null || retryCount < 5) && !contentComplete) {
 
