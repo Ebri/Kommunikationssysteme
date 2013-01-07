@@ -112,7 +112,7 @@ public class Stack implements PacketReceiver {
     /** Portnummer des Empfängers */
     int sendDstPort = 80
     /** Größe des Empfangsfensters */
-    int sendWindowSize = 14000
+    int sendWindowSize = 14920
     /** Zu sendende Sequenznummer */
     long sendSeqNumber = 0
     /** Zu sendende Quittierungsnummer */
