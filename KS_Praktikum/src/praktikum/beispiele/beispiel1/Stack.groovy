@@ -350,7 +350,6 @@ public class Stack implements PacketReceiver {
                 if (recvSeqNumber == sendAckNumber) {
                     sendSynFlag = false
                     sendAckFlag = true
-                    // FETTES FUCK YOU MR.SOMMER DUMPFBACKE
                     sendAckNumber = sendAckNumber + recvData.size()
                     sendFinFlag = false
                     sendData = []
