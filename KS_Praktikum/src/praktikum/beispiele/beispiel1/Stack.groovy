@@ -409,8 +409,8 @@ public class Stack implements PacketReceiver {
         recvAckFlag = packet.ack
         recvFinFlag = packet.fin
         recvSynFlag = packet.syn
-        System.arraycopy(packet.data,0,recvData,0,packet.data.length-1)
-        //recvData = Utils.concatenateByteArrays(recvData, packet.data)
+        System.arraycopy((packet.data as byte[]),0,(recvData as byte[]),0,(packet.data as byte[]).length)
+        recvData = Utils.concatenateByteArrays(recvData, packet.data)
 
         // Nur zur Protokollierunng, kann auskommentiert werden
         //Utils.writeLog("Stack", "processTCPPacket", "received: ${recvAckFlag ? "ACK," : ""} ${recvSynFlag ? "SYN," : ""}" +
