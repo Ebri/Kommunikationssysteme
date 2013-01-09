@@ -21,11 +21,16 @@ class HttpHeaderParser {
 		String[] lines = httpHeader.split("\r\n");
 
         // Untersuche die Zeilen auf einen Doppelpunkt und trenne die Schlüssel-Attribut-Paare daran.
-        for (String line : lines) {
-            if (line.contains(":")) {
-                String[] fields = line.split(":");
-                attributes.put(fields[0],fields[1].trim());
+
+        try {
+            for (String line : lines) {
+                if (line.contains(":")) {
+                    String[] fields = line.split(":");
+                    attributes.put(fields[0],fields[1].trim());
+                }
             }
+        } catch (ArrayIndexOutOfBoundsException e) {
+            e.printStackTrace();
         }
 
 

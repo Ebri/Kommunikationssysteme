@@ -93,6 +93,7 @@ public class Stack implements PacketReceiver {
                 [on: Event.E_SEND_DATA, from: State.S_WAITING, to: State.S_SEND_DATA],
                 [on: Event.E_DATA_SENT, from: State.S_SEND_DATA, to: State.S_WAITING],
                 [on: Event.E_RCVD_DATA, from: State.S_WAITING, to: State.S_RCVD_DATA],
+                [on: Event.E_RCVD_DATA, from: State.S_RCVD_DATA, to: State.S_RCVD_DATA],
                 [on: Event.E_RCVD_ACK, from: State.S_WAITING, to: State.S_RCVD_ACK],
                 [on: Event.E_WAITING, from: State.S_RCVD_DATA, to: State.S_WAITING],
                 [on: Event.E_WAITING, from: State.S_RCVD_ACK, to: State.S_WAITING],
@@ -112,7 +113,7 @@ public class Stack implements PacketReceiver {
     /** Portnummer des Empfängers */
     int sendDstPort = 80
     /** Größe des Empfangsfensters */
-    int sendWindowSize = 14000
+    int sendWindowSize = 14920
     /** Zu sendende Sequenznummer */
     long sendSeqNumber = 0
     /** Zu sendende Quittierungsnummer */
@@ -347,6 +348,9 @@ public class Stack implements PacketReceiver {
 
             case (State.S_RCVD_DATA):
                 // Daten empfangen
+                if (debug) {
+                    System.out.println("Sequenznummer: " + recvSeqNumber + "\n AckNummer: " + sendAckNumber);
+                }
                 if (recvSeqNumber == sendAckNumber) {
                     sendSynFlag = false
                     sendAckFlag = true
@@ -405,12 +409,13 @@ public class Stack implements PacketReceiver {
         recvAckFlag = packet.ack
         recvFinFlag = packet.fin
         recvSynFlag = packet.syn
-        recvData = Utils.concatenateByteArrays(recvData, packet.data)
+        System.arraycopy(packet.data,0,recvData,0,packet.data.length-1)
+        //recvData = Utils.concatenateByteArrays(recvData, packet.data)
 
         // Nur zur Protokollierunng, kann auskommentiert werden
-        Utils.writeLog("Stack", "processTCPPacket", "received: ${recvAckFlag ? "ACK," : ""} ${recvSynFlag ? "SYN," : ""}" +
-                "${recvFinFlag ? "FIN," : ""} ${recvSeqNumber}" +
-                ",${recvAckNumber}, \"${new String(recvData)}\"")
+        //Utils.writeLog("Stack", "processTCPPacket", "received: ${recvAckFlag ? "ACK," : ""} ${recvSynFlag ? "SYN," : ""}" +
+        //        "${recvFinFlag ? "FIN," : ""} ${recvSeqNumber}" +
+        //        ",${recvAckNumber}, \"${new String(recvData)}\"")
 
         int event = 0
         // Ereignis bestimmen
@@ -874,7 +879,7 @@ public class Stack implements PacketReceiver {
 
                 if (debug) {
                     System.out.println("*********** Content Length: " + parser.getContentLength());
-                    System.out.println("*********** Data: " + parser.getData());
+                    //System.out.println("*********** Data: " + parser.getData());
                     System.out.println("*********** Data Length: " + parser.getDataLength());
                 }
                 /*
