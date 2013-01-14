@@ -123,7 +123,7 @@ public class ARP {
 
         arp.sender_protoaddr = ownIP.getAddress();
         arp.target_hardaddr = macAddress;
-        arp.sender_protoaddr = ip.getAddress();
+        arp.target_protoaddr = ip.getAddress();
 
         //Erstelle das Ethernet Packet (Schicht 2)
         EthernetPacket ether = new EthernetPacket();
