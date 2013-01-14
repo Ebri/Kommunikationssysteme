@@ -20,7 +20,9 @@ loop:	for(NetworkInterface d:devices){
 				byte[] bip=ip.getAddress();
 				byte[] subnet=addr.subnet.getAddress();
 				byte[] bif=addr.address.getAddress();
-				for(int i=0;i<4;i++){
+
+
+                for(int i=0;i<4;i++){
 					bip[i]=(byte)(bip[i]&subnet[i]);
 					bif[i]=(byte)(bif[i]&subnet[i]);
 				}
@@ -87,5 +89,6 @@ loop:	for(NetworkInterface d:devices){
 			System.out.println();
 			System.exit(0);
 		}
+
 	}
 }
