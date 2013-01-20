@@ -190,7 +190,7 @@ public class ARP implements PacketReceiver{
                 }
             }
         }
-        throw new IllegalArgumentException(ip + "is not a local address");
+        throw new IllegalArgumentException("$ip is not a local address");
     }
 
     /**
