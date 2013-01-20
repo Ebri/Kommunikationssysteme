@@ -345,6 +345,14 @@ public class Stack implements PacketReceiver {
                     sendSeqNumber = recvAckNumber
                     fsm.fire(Event.E_WAITING)
                 }
+                if (recvSeqNumber == sendAckNumber-1) {
+                    sendSynFlag = false;
+                    sendAckFlag = true;
+                    sendFinFlag = false;
+
+                    sendTCPPacket(retransTimeout0);
+                    fsm.fire(Event.E_WAITING);
+                }
                 break
 
             case (State.S_RCVD_DATA):
@@ -841,17 +849,17 @@ public class Stack implements PacketReceiver {
         Solange etwas aus dem ResultQueue entnommen wurde, wird die Schleife ausgeführt. Wenn nichts entnommen wurde,
         dann wird ein Zähler hochgezählt, der nach 5 Counts die Schleife abbricht.
          */
-        while ((resultQueueEntry != null || retryCount < 50) && !contentComplete) {
+        while ((resultQueueEntry != null || retryCount < 10) && !contentComplete) {
 
             // hochzählen der packete während sendWindowSize 0 ist
             if(sendWindowSize == 0){
                 packetsWhileWSTest++;
-                System.out.println("WPackete Empfangen während WS = 0 :" + sendWindowSize)
+                System.out.println("WPackete Empfangen während WS = 0 :" + packetsWhileWSTest)
             }
 
             // zurücksetzen der sendWindowSize und mitgezählten packets nach 10 packeten
-            if (packetsWhileWSTest > 10){
-                sendWindowSize = 1492
+            if (packetsWhileWSTest > 5){
+                sendWindowSize = 3000
                 packetsWhileWSTest = 0
             }
 
