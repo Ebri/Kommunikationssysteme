@@ -110,7 +110,7 @@ class HttpBeispiel {
         String reply = stack.sendRequest("/index.html", host)
 
         // HTML-Dokument anzeigen
-        Utils.writeLog("Stack", "start", "\n********* Antwort *********\nAntwort: ${reply}\n*****************************\n")
+        Utils.writeLog("Stack", "start", "\n********* Antwort *********\nAntwort:\n ${reply}\n*****************************\n")
 
         // Verbindung zum HTTP-Dienst ("Web-Server") schließen
         stack.close()
