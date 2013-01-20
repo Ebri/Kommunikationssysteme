@@ -252,7 +252,7 @@ loop:	for(NetworkInterface d:devices){
                 }
             }
         }
-        throw new IllegalArgumentException(ip + "is not a local address");
+        throw new IllegalArgumentException("$ip is not a local address");
     }
 
     /**
