@@ -718,6 +718,11 @@ public class Stack implements PacketReceiver {
         if (withJpcap) {
             // jpcap initialisieren
             // Netzwerk-Device initialisieren
+
+
+
+
+
             device = Utils.getDevice(deviceName)
 
             receiver = JpcapCaptor.openDevice(device, 65535, false, 20)
@@ -769,8 +774,13 @@ public class Stack implements PacketReceiver {
     void open() {
         // Übergabe des Kommandos
         cmdQueue.put([Cmd.OPEN])
-        // Warten auf abgeschlossenen Verbindungsaufbau (hier sollte ein Timeout verwendet werden)
-        while (fsm.getState() != State.S_WAITING) {
+        long openStart = System.currentTimeMillis();
+        boolean timeout = false;
+        // Warten auf abgeschlossenen Verbindungsaufbau
+        while (fsm.getState() != State.S_WAITING && !timeout) {
+            // Timeout 10 Sekunden
+            if (System.currentTimeMillis() - openStart >= 10000)
+                timeout = true;
         }
     }
 
@@ -782,8 +792,13 @@ public class Stack implements PacketReceiver {
     void close() {
         // Übergabe des Kommandos
         cmdQueue.put([Cmd.CLOSE])
+        long closeStart = System.currentTimeMillis();
+        boolean timeout = false;
         // Warten auf Beendigung der Verbindung (hier sollte ein Timeout verwendet werden)
-        while (fsm.getState() != State.S_IDLE) {
+        while (fsm.getState() != State.S_IDLE && !timeout) {
+            if (System.currentTimeMillis() - closeStart >= 10000) {
+                timeout = true;
+            }
         }
     }
 
@@ -795,6 +810,8 @@ public class Stack implements PacketReceiver {
      * @return HTML-Dokument (hier: nur das erste Teilstück)
      */
     String sendRequest(String page, String host) {
+
+        InetAddress.getByName("google.com").isReachable(4000);
 
         // HTTP-PDU
         String applicationDataString = "GET ${page} HTTP/1.1\r\n";
