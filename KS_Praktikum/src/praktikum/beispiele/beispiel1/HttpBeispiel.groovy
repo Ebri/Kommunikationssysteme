@@ -107,7 +107,7 @@ class HttpBeispiel {
         stack.open()
 
         // HTML-Dokument anfordern
-        String reply = stack.sendRequest("/index.html", host)
+        String reply = stack.sendRequest("/100kB.qsc", host)
 
         // HTML-Dokument anzeigen
         Utils.writeLog("Stack", "start", "\n********* Antwort *********\nAntwort:\n ${reply}\n*****************************\n")

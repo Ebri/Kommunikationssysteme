@@ -112,7 +112,9 @@ public class Stack implements PacketReceiver {
     /** Portnummer des Empfängers */
     int sendDstPort = 80
     /** Größe des Empfangsfensters */
-    int sendWindowSize = 1492
+    int sendWindowSize = 3000
+    /** die Empfangenen Packete während sendWindowSize 0 war   */
+    int packetsWhileWSTest  = 0
     /** Zu sendende Sequenznummer */
     long sendSeqNumber = 0
     /** Zu sendende Quittierungsnummer */
@@ -356,6 +358,14 @@ public class Stack implements PacketReceiver {
                     // Daten an Anwendung übergeben
                     resultQueue.put([Cmd.DATA, recvData.clone()])
                     recvData = []
+
+                    // Empfangsfenstergröße Anpassen
+                    if(sendWindowSize>0){
+                        sendWindowSize -= 1000
+                        System.out.println("WindowSIZE SET TO :" + sendWindowSize)
+                    }
+
+
                     // ACK für Daten senden
                     sendTCPPacket(retransTimeout0)
                     fsm.fire(Event.E_WAITING)
@@ -831,7 +841,19 @@ public class Stack implements PacketReceiver {
         Solange etwas aus dem ResultQueue entnommen wurde, wird die Schleife ausgeführt. Wenn nichts entnommen wurde,
         dann wird ein Zähler hochgezählt, der nach 5 Counts die Schleife abbricht.
          */
-        while ((resultQueueEntry != null || retryCount < 5) && !contentComplete) {
+        while ((resultQueueEntry != null || retryCount < 50) && !contentComplete) {
+
+            // hochzählen der packete während sendWindowSize 0 ist
+            if(sendWindowSize == 0){
+                packetsWhileWSTest++;
+                System.out.println("WPackete Empfangen während WS = 0 :" + sendWindowSize)
+            }
+
+            // zurücksetzen der sendWindowSize und mitgezählten packets nach 10 packeten
+            if (packetsWhileWSTest > 10){
+                sendWindowSize = 1492
+                packetsWhileWSTest = 0
+            }
 
             // Berechne die Zeit für jeden nächste Teil neu
             long start = System.currentTimeMillis();
