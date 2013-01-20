@@ -2,6 +2,8 @@ package praktikum.beispiele.arpBeispiel
 import praktikum.beispiele.utils.Utils
 import jpcap.*
 import jpcap.packet.*
+
+import java.text.SimpleDateFormat
 import java.util.concurrent.LinkedBlockingQueue
 
 /**
@@ -36,6 +38,9 @@ public class ARP implements PacketReceiver{
     final String broadcastMacAddress = "ff:ff:ff:ff:ff:ff"
 
     LinkedBlockingQueue<Packet> recvQueue = new LinkedBlockingQueue()
+
+    HashMap<String, ArrayList<String>> arpCache = new HashMap<String, ArrayList<String>>();
+    final int arpExpireTime = 5;
 
     /*
     Constructor
@@ -127,6 +132,8 @@ public class ARP implements PacketReceiver{
         // at this point we already know that this packet is addressed either
         // to us or to broadcast, so it concerns us.
 
+        println("[*] Current ARP Cache $arpCache")
+
         InetAddress target_protoaddr = InetAddress.getByAddress(p.target_protoaddr)
         debug("[.] target_hardaddr is $p.target_hardaddr")
         debug("[.] target_protoaddr is $target_protoaddr")
@@ -136,91 +143,20 @@ public class ARP implements PacketReceiver{
             // this is an ARP request, and it requests our MAC
             // we will send a reply
             println("[*] ARP request from $p.senderProtocolAddress ($p.senderHardwareAddress)")
-            reply(p.senderProtocolAddress, p.sender_hardaddr, sender)
+
+            writeArpCache(p.senderProtocolAddress,p.senderHardwareAddress);
+
+            reply(p.senderProtocolAddress as InetAddress, p.sender_hardaddr, sender)
             return
         }
 
         if (p.operation == ARPPacket.ARP_REPLY &&
             p.targetHardwareAddress == ownMacAddress) {
             // this is an ARP reply, and it is for us
+            writeArpCache(p.senderProtocolAddress,p.senderHardwareAddress);
             println("[*] ARP reply from $p.senderProtocolAddress ($p.senderHardwareAddress)")
         }
     }
-
-
-    // meines Erachtens ist diese Methode obsolet (wird durch ARP.request ersetzt)
-    /**
-     * requests the mac-adress from the connected lan-device
-     * @param ip IP for which the MAC is to be requested
-     * @return the MAC-Adress to the given ip
-     * @throws IOException
-     */
-    public byte[] arpRequest(InetAddress ip) throws java.io.IOException{
-        //find network interface
-        NetworkInterface[] devices=JpcapCaptor.getDeviceList();
-        NetworkInterface device=null;
-
-loop:	for(NetworkInterface d:devices){
-            for(NetworkInterfaceAddress addr:d.addresses){
-                if(!(addr.address instanceof Inet4Address)) continue;
-                byte[] bip=ip.getAddress();
-                byte[] subnet=addr.subnet.getAddress();
-                byte[] bif=addr.address.getAddress();
-                for(int i=0;i<4;i++){
-                    bip[i]=(byte)(bip[i]&subnet[i]);
-                    bif[i]=(byte)(bif[i]&subnet[i]);
-                }
-                if(Arrays.equals(bip,bif)){
-                    device=d;
-                    break loop;
-                }
-            }
-        }
-
-        if(device==null)
-            throw new IllegalArgumentException(ip+" is not a local address");
-
-
-
-        InetAddress srcip=null;
-        for(NetworkInterfaceAddress addr:device.addresses)
-            if(addr.address instanceof Inet4Address){
-                srcip=addr.address;
-                break;
-            }
-
-        byte[] broadcast = [(byte) 255, (byte) 255, (byte) 255,(byte) 255, (byte) 255, (byte) 255];
-
-        ARPPacket arp=new ARPPacket();
-        arp.hardtype=ARPPacket.HARDTYPE_ETHER;
-        arp.prototype=ARPPacket.PROTOTYPE_IP;
-        arp.operation=ARPPacket.ARP_REQUEST;
-        arp.hlen=6;
-        arp.plen=4;
-        arp.sender_hardaddr=device.mac_address;
-        arp.sender_protoaddr=srcip.getAddress();
-        arp.target_hardaddr=broadcast;
-        arp.target_protoaddr=ip.getAddress();
-
-        EthernetPacket ether=new EthernetPacket();
-        ether.frametype=EthernetPacket.ETHERTYPE_ARP;
-        ether.src_mac=device.mac_address;
-        ether.dst_mac=broadcast;
-        arp.datalink=ether;
-
-        sender.sendPacket(arp);
-
-        while(true){
-            ARPPacket p=(ARPPacket)captor.getPacket();
-            if(p==null){
-                throw new IllegalArgumentException(ip+" is not a local address");
-            }
-            if(Arrays.equals(p.target_protoaddr,srcip.getAddress())){
-                return p.sender_hardaddr;
-            }
-        }
-    }
-
 
     /**
      * Findet das NetzwerkInterface über welches die gegebene IP-Adresse erreichbar ist.
@@ -229,6 +165,8 @@ loop:	for(NetworkInterface d:devices){
      * @return Das gesuchte NetzwerkInterface
      * @throws IllegalArgumentException wenn keine gültige (nicht in einem angeschlossenen Subnetz zu findende) IP angegeben wurde.
      */
+    EthernetPacket recvFrame
+
     static NetworkInterface getNetworkInterface(InetAddress ip) throws IllegalArgumentException {
         NetworkInterface[] devices = JpcapCaptor.getDeviceList();
 
@@ -309,7 +247,6 @@ loop:	for(NetworkInterface d:devices){
         arp.datalink = ether;
 
         //Sendet das Packet über die angegebene Jpcap Instanz.
-        // TODO: laut ethercap geht das Paket korrekt raus, wir empfangen aber keine Antwort
         println("[*] sending ARP request packet to $ip")
         println("    sender_hardaddr = $arp.senderHardwareAddress")
         println("    sender_protoaddr = $arp.senderProtocolAddress")
@@ -354,5 +291,47 @@ loop:	for(NetworkInterface d:devices){
         sender.sendPacket(arp);
     }
 
+    private void writeArpCache(InetAddress ip, String mac) {
+        String ipString = ip.getHostAddress();
+        String macString = mac;
+        ArrayList<String> list = new ArrayList<String>();
+        list.add(ipString);
+        list.add(macString);
+        list.add(getTime());
+
+        arpCache.put(ipString, list);
+    }
+
+    public String readArpCache(String ip) {
+        if (arpCache.get(ip) == null) {
+            return null;
+        }
+        String macString = arpCache.get(ip).get(1);
+        String timestamp = arpCache.get(ip).get(2);
+
+        int stunden = Integer.valueOf(timestamp.substring(0,2));
+        int minuten = Integer.valueOf(timestamp.substring(3,5));
+
+        String now = getTime();
+
+        int aktStunden = Integer.valueOf(now.substring(0,2));
+        int aktMinuten = Integer.valueOf(now.substring(3,5));
+
+        if ((aktMinuten > (minuten+arpExpireTime)%60) && (aktStunden > stunden)) {
+            arpCache.remove(ip);
+            return null;
+        }
+        else {
+            return macString;
+        }
+
+
+    }
+
+    private static String getTime() {
+        Date date = new Date();
+        SimpleDateFormat sdf = new SimpleDateFormat("hh:mm")
+        return sdf.format(date);
+    }
 }
 

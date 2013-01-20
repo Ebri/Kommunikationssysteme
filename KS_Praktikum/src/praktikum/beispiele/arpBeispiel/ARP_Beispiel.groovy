@@ -31,7 +31,7 @@ class arpBeispiel {
     // Konfiguration der Ablaufumgebung ENDE
     //========================================================================================================//
 
-    static void main(String[] args)  {
+    static void main(String[] args) {
         boolean debug = false
 
         // Behandlung von Kommandozeilenoptionen
@@ -73,7 +73,7 @@ class arpBeispiel {
 
         // Den Netzwerkstack initialisieren
         ARP arp = new ARP(config.deviceName, config.ownMacAddress,
-                          config.ownIPAddress, debug)
+                config.ownIPAddress, debug)
 
         arp.start()
 
@@ -82,14 +82,15 @@ class arpBeispiel {
         sleep(3000)
 
         println("*** Control: Sending ARP request for $options.t")
-        arp.request(options.t)
+        if (arp.readArpCache(options.t) == null) {
+            arp.request(options.t)
+        }
     }
 }
 
 //========================================================================================================//
 // HttpBeispiel-Klasse ENDE
 //========================================================================================================//
-
 
 //========================================================================================================//
 // Hauptprogramm ENDE
