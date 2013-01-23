@@ -145,14 +145,14 @@ public class ARP implements PacketReceiver{
             println("[*] ARP request from $p.senderProtocolAddress ($p.senderHardwareAddress)")
 
             writeArpCache(p.senderProtocolAddress,p.senderHardwareAddress);
-            // warum doppelt senden?
+
             reply(p.senderProtocolAddress as InetAddress, p.sender_hardaddr, sender)
             return
         }
 
         if (p.operation == ARPPacket.ARP_REPLY &&
             p.targetHardwareAddress == ownMacAddress) {
-            // this is an ARP reply, and it is for us
+            // this is an ARP reply, and it is for us, von ausserhalb
             writeArpCache(p.senderProtocolAddress,p.senderHardwareAddress);  // eintrag in den cache
             println("[*] ARP reply from $p.senderProtocolAddress ($p.senderHardwareAddress)")
         }
