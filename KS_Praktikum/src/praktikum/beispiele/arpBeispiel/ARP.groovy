@@ -145,7 +145,7 @@ public class ARP implements PacketReceiver{
             println("[*] ARP request from $p.senderProtocolAddress ($p.senderHardwareAddress)")
 
             writeArpCache(p.senderProtocolAddress,p.senderHardwareAddress);
-
+            // warum doppelt senden?
             reply(p.senderProtocolAddress as InetAddress, p.sender_hardaddr, sender)
             return
         }
@@ -153,7 +153,7 @@ public class ARP implements PacketReceiver{
         if (p.operation == ARPPacket.ARP_REPLY &&
             p.targetHardwareAddress == ownMacAddress) {
             // this is an ARP reply, and it is for us
-            writeArpCache(p.senderProtocolAddress,p.senderHardwareAddress);
+            writeArpCache(p.senderProtocolAddress,p.senderHardwareAddress);  // eintrag in den cache
             println("[*] ARP reply from $p.senderProtocolAddress ($p.senderHardwareAddress)")
         }
     }
@@ -290,7 +290,7 @@ public class ARP implements PacketReceiver{
         //Sende das Packet über die angegebene Jpcap Senderinstanz.
         sender.sendPacket(arp);
     }
-
+    // um die die mac mit einem timestamp zu versehen uebergeben wir als zweiten wert der hashmap eine liste
     private void writeArpCache(InetAddress ip, String mac) {
         String ipString = ip.getHostAddress();
         String macString = mac;
@@ -298,36 +298,38 @@ public class ARP implements PacketReceiver{
         list.add(ipString);
         list.add(macString);
         list.add(getTime());
-
-        arpCache.put(ipString, list);
+        arpCache.put(ipString, list); // eintragen in die hashmap (KEY,Value(liste))
     }
 
+    //auslesen aus dem cache
     public String readArpCache(String ip) {
+        //   check ob es einen key eintrag gibt
         if (arpCache.get(ip) == null) {
-            return null;
+            return null; // bei null wird ein neuer arp request ausgeloest
         }
-        String macString = arpCache.get(ip).get(1);
-        String timestamp = arpCache.get(ip).get(2);
-
-        int stunden = Integer.valueOf(timestamp.substring(0,2));
-        int minuten = Integer.valueOf(timestamp.substring(3,5));
-
+        // auslesen der listen werte
+        String macString = arpCache.get(ip).get(1);//mac
+        String timestamp = arpCache.get(ip).get(2);//timestamp
+        // "rechenbar" machen des timestamps
+        int stunden = Integer.valueOf(timestamp.substring(0,2));//stunden
+        int minuten = Integer.valueOf(timestamp.substring(3,5));//minuten
+        //aktuelle zeit
         String now = getTime();
-
-        int aktStunden = Integer.valueOf(now.substring(0,2));
-        int aktMinuten = Integer.valueOf(now.substring(3,5));
-
+        //"rechenbar machen der aktuellen zeit"
+        int aktStunden = Integer.valueOf(now.substring(0,2));//Stunden
+        int aktMinuten = Integer.valueOf(now.substring(3,5));//minuten
+        //ueberpruefung ob der tabelleneintrag aelter ist als 5 min (arpExpireTime)
         if ((aktMinuten > (minuten+arpExpireTime)%60) && (aktStunden > stunden)) {
-            arpCache.remove(ip);
-            return null;
+            arpCache.remove(ip); // solle die pruefung unguenstig verlaufen, wird der eintrag entfernt
+            return null;         // und eine neue abfrage ausgeloest
         }
         else {
-            return macString;
+            return macString;   // andernfalls wird die mac returned
         }
 
 
     }
-
+    // aktuelle uhrzeit
     private static String getTime() {
         Date date = new Date();
         SimpleDateFormat sdf = new SimpleDateFormat("hh:mm")
