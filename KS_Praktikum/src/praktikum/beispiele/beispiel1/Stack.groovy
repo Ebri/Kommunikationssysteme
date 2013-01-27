@@ -257,6 +257,9 @@ public class Stack implements PacketReceiver {
     int newState = State.S_IDLE
     boolean debug
 
+    int WSTests = 0;
+
+
     //========================================================================================================//
     // Programm-interne Vereinbarungen ENDE
     //========================================================================================================//
@@ -357,22 +360,15 @@ public class Stack implements PacketReceiver {
 
             case (State.S_RCVD_DATA):
                 // Daten empfangen
-                if (recvSeqNumber == sendAckNumber) {
+                if (recvSeqNumber >= sendAckNumber) {
                     sendSynFlag = false
                     sendAckFlag = true
-                    sendAckNumber = sendAckNumber + recvData.size()
+                    //sendAckNumber = sendAckNumber  + recvData.size()
                     sendFinFlag = false
                     sendData = []
                     // Daten an Anwendung übergeben
                     resultQueue.put([Cmd.DATA, recvData.clone()])
                     recvData = []
-
-                    // Empfangsfenstergröße Anpassen
-                    if(sendWindowSize>0){
-                        sendWindowSize -= 1000
-                        System.out.println("WindowSIZE SET TO :" + sendWindowSize)
-                    }
-
 
                     // ACK für Daten senden
                     sendTCPPacket(retransTimeout0)
@@ -845,23 +841,12 @@ public class Stack implements PacketReceiver {
 
         boolean contentComplete = false;
 
+
         /*
         Solange etwas aus dem ResultQueue entnommen wurde, wird die Schleife ausgeführt. Wenn nichts entnommen wurde,
         dann wird ein Zähler hochgezählt, der nach 5 Counts die Schleife abbricht.
          */
         while ((resultQueueEntry != null || retryCount < 10) && !contentComplete) {
-
-            // hochzählen der packete während sendWindowSize 0 ist
-            if(sendWindowSize == 0){
-                packetsWhileWSTest++;
-                System.out.println("WPackete Empfangen während WS = 0 :" + packetsWhileWSTest)
-            }
-
-            // zurücksetzen der sendWindowSize und mitgezählten packets nach 10 packeten
-            if (packetsWhileWSTest > 5){
-                sendWindowSize = 3000
-                packetsWhileWSTest = 0
-            }
 
             // Berechne die Zeit für jeden nächste Teil neu
             long start = System.currentTimeMillis();
