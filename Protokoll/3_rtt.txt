@@ -1,0 +1,4 @@
+Aufgabe 3: Messen des Retransmission Timeout
+============================================
+
+* Wir senden nach Senden des GET-Requests keine ACK's für empfangene Daten vom Server. Der Server sendet erst in zunehmendem Abstand (3, 4, 9, 10 Sekunden) und dann alle zehn Sekunden die Daten erneut (TCP Retransmission).

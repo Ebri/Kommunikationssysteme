@@ -1,0 +1,32 @@
+Arbeitsschritte Konfiguration
+=============================
+
+
+1: Konfiguration der Netzwerkkomponenten
+----------------------------------------
+* C wird mit dem richtigen Switch-Port (siehe S. 2 Praktikumsprotokoll) verbunden
+* R wird mit dem richtigen Switch-Port verbunden
+* Eventuell weitere, nötige Kabelverbindungen werden hergestellt (LAN 2)
+
+* Der Client wird mit der richtigen IP-Adresse und Subnetzmaske und Route (Router) konfiguiert
+  * Abschalten der automatischen Konfiguration:
+    sudo /etc/init.de/network-manager stop
+  * ifconfig, route
+  
+* Auf dem Client wird die für die JPCAP nötige Firewallregel hinzugefügt
+  iptables -A INPUT -p tcp --dport 33333 -j DROP
+
+* Der Router wird mit der richtigen IP-Adresse, Subnetzmaske und Route (direkt) konfiguiert
+  * Abschalten der automatischen Konfiguration:
+    sudo /etc/init.de/network-manager stop
+  * ifconfig, route
+
+2: Überprüfung der Funktionsfähigkeit des Routers
+-------------------------------------------------
+* Es wird getestet, ob über die Netzwerkverbindung von C S erreicht werden kann (ping, telnet 80)
+
+3: Inbetriebnahme der Software
+------------------------------
+* Die Software, incl. groovy, werden auf C installiert
+* Die env.conf wird mit den korrekten Daten (Praktikumsprotokoll, ifconfig) ausgefüllt
+* Die Software wird auf Funktionsfähigkeit getestet (ausführen von Aufgabe 1)

@@ -1,0 +1,8 @@
+Aufgabe 2
+=========
+(TCP-Empfangsfenstergröße)
+
+* Wir senden ein GET-Request an den Webserver mit einer TCP Window Size von 3000
+* Daraufhin reduzieren wir mit jeder empfangenen TCP-PDU die Window Size um 1000 auf 2000, 1000 und endlich Null.
+* Wenn das Fenster Null ist, schickt der Server in größer werdenden Zeitabständen (3, 5, 11 Sekunden => exponentielle Steigung) ein Keepalive-Paket ohne Daten, das wir mit einem ACK mit geschlossenem Fenster beantworten.
+* Nach einiger Zeit öffnen wir das Fenster wieder mit 3000, worauf der Server weitere Daten sendet.

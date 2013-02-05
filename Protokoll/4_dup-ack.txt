@@ -1,0 +1,5 @@
+4: Senden von DUP-ACK's
+=======================
+
+* Wir senden nach Senden des GET-Requests weiter nur ACK's für das erste vom Server empfangene Paket (relative ACK-Nummer 1).
+* Der Server sendet darauf sein zweites Paket nach einer Verzögerung noch einmal. Diese Verzögerung steigt ebenfalls exponentiell, und erreicht bei 10 Sekunden ihr Maximum.
